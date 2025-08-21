@@ -1,7 +1,7 @@
 [project]
 name = "sleeper-mcp"
 version = "0.1.0"
-description = "A Machine Context Provider (MCP) server for integrating Sleeper fantasy sports data with Goose AI"
+description = "A Machine Context Provider (MCP) server for integrating Sleeper fantasy sports data with any MCP-compatible LLM client"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [

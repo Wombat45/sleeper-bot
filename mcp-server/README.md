@@ -1,10 +1,10 @@
 # Sleeper MCP Server
 
-A Machine Context Protocol (MCP) server for integrating Sleeper fantasy sports data with Goose AI. This server implements the MCP specification to provide structured access to Sleeper's API data.
+A Machine Context Protocol (MCP) server for integrating Sleeper fantasy sports data with any MCP-compatible LLM client. This server implements the MCP specification to provide structured access to Sleeper's API data.
 
 ## Overview
 
-The Sleeper MCP Server acts as a bridge between Goose AI and the Sleeper Fantasy Sports platform, implementing the Model Context Protocol (MCP) for seamless integration.
+The Sleeper MCP Server acts as a bridge between MCP-compatible LLM clients and the Sleeper Fantasy Sports platform, implementing the Model Context Protocol (MCP) for seamless integration.
 
 Features:
 - Structured access to fantasy sports data via MCP
@@ -12,6 +12,7 @@ Features:
 - Data caching and optimization
 - OpenAPI documentation
 - MCP-compliant function specifications
+- Rich fantasy football domain context and insights
 
 ## Installation
 
@@ -20,32 +21,32 @@ Features:
 git clone https://github.com/yourusername/sleeper-mcp.git
 cd sleeper-mcp
 
-# Install dependencies using Poetry
-poetry install
+# Install dependencies using uv
+uv sync
 
 # Start the server
-poetry run uvicorn src.main:app
+uv run uvicorn src.main:app
 ```
 
-## Integration with Goose
+## Integration with MCP Clients
 
-The Sleeper MCP server integrates with Goose in two ways:
+The Sleeper MCP server integrates with any MCP-compatible client:
 
 1. Start the server:
 ```bash
-poetry run uvicorn src.main:app
+uv run uvicorn src.main:app
 ```
 
-2. Use with Goose:
+2. Use with any MCP client:
 
 a. Via session:
 ```bash
-goose session --with-extension "uvicorn src.main:app"
+your-mcp-client session --with-extension "uvicorn src.main:app"
 ```
 
 b. Via single command:
 ```bash
-goose run --with-extension "uvicorn src.main:app" -t "your instructions"
+your-mcp-client run --with-extension "uvicorn src.main:app" -t "your instructions"
 ```
 
 Available functions:
@@ -99,13 +100,13 @@ sleeper-mcp/
 ### Running Tests
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 ### Development Server
 
 ```bash
-poetry run uvicorn src.main:app --reload
+uv run uvicorn src.main:app --reload
 ```
 
 ## Security Considerations
@@ -116,18 +117,8 @@ As per MCP specification:
 - No sensitive data exposure
 - Clear error reporting
 
+**Note**: The Sleeper API is a read-only public API that doesn't require authentication. All fantasy football data is publicly accessible.
+
 ## API Documentation
 
 - OpenAPI documentation: `/docs`
-- Raw API documentation: `/docs/sleeper_api_raw.html`
-- MCP capabilities: `/capabilities`
-
-## License
-
-[Add your chosen license]
-
-## Acknowledgments
-
-- Sleeper API Team
-- Model Context Protocol Specification
-- Goose AI Team

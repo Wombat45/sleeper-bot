@@ -38,8 +38,8 @@ class User(BaseModel):
 class LeagueSettings(BaseModel):
     """League configuration settings."""
 
-    draft_type: str = Field(..., description="Type of draft")
-    num_teams: int = Field(..., description="Number of teams in the league")
+    draft_type: Optional[str] = Field(None, description="Type of draft")
+    num_teams: Optional[int] = Field(None, description="Number of teams in the league")
     scoring_type: Optional[str] = Field(None, description="Scoring type for the league")
 
 

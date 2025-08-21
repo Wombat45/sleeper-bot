@@ -1,7 +1,6 @@
-"""Integration tests for Sleeper MCP server.
+"""Integration tests for the Sleeper MCP server.
 
-These tests verify the complete integration between our MCP server,
-the Sleeper API, and Goose interaction patterns.
+This module tests the integration between the MCP server, the Sleeper API, and MCP client interaction patterns.
 """
 
 import json

@@ -1,7 +1,7 @@
-"""MCP protocol models for the Sleeper integration.
+"""MCP protocol models for Sleeper integration.
 
-This module defines the data models for the Machine Context Provider (MCP) protocol,
-which enables integration with Goose AI.
+This module defines the data models used in the MCP protocol implementation,
+which enables integration with any MCP-compatible LLM client.
 """
 
 from enum import Enum

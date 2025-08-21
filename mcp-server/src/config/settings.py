@@ -6,6 +6,7 @@ This module handles all configuration settings for the application, including:
 - Rate limiting parameters
 - Caching configuration
 """
+import os
 from functools import lru_cache
 from typing import Optional
 
@@ -28,6 +29,15 @@ class SleeperAPIConfig(BaseModel):
         description="Timeout for API requests in seconds",
     )
 
+    @classmethod
+    def from_env(cls) -> "SleeperAPIConfig":
+        """Create configuration from environment variables."""
+        return cls(
+            base_url=os.getenv("SLEEPER_API_BASE_URL", "https://api.sleeper.app/v1"),
+            rate_limit_per_minute=int(os.getenv("SLEEPER_API_RATE_LIMIT_PER_MINUTE", "1000")),
+            timeout_seconds=float(os.getenv("SLEEPER_API_TIMEOUT_SECONDS", "30.0")),
+        )
+
 
 class CacheConfig(BaseModel):
     """Configuration for caching."""
@@ -40,6 +50,14 @@ class CacheConfig(BaseModel):
         default=1000,
         description="Maximum number of items in the cache",
     )
+
+    @classmethod
+    def from_env(cls) -> "CacheConfig":
+        """Create configuration from environment variables."""
+        return cls(
+            ttl_seconds=int(os.getenv("CACHE_TTL_SECONDS", "300")),
+            max_size=int(os.getenv("CACHE_MAX_SIZE", "1000")),
+        )
 
 
 class ServerConfig(BaseModel):
@@ -62,13 +80,23 @@ class ServerConfig(BaseModel):
         description="Server environment (development/production)",
     )
 
+    @classmethod
+    def from_env(cls) -> "ServerConfig":
+        """Create configuration from environment variables."""
+        return cls(
+            host=os.getenv("SERVER_HOST", "0.0.0.0"),
+            port=int(os.getenv("SERVER_PORT", "8000")),
+            debug=os.getenv("SERVER_DEBUG", "false").lower() == "true",
+            environment=os.getenv("SERVER_ENVIRONMENT", "development"),
+        )
+
 
 class Config(BaseModel):
     """Root configuration class combining all settings."""
 
-    server: ServerConfig = Field(default_factory=ServerConfig)
-    sleeper_api: SleeperAPIConfig = Field(default_factory=SleeperAPIConfig)
-    cache: CacheConfig = Field(default_factory=CacheConfig)
+    server: ServerConfig = Field(default_factory=ServerConfig.from_env)
+    sleeper_api: SleeperAPIConfig = Field(default_factory=SleeperAPIConfig.from_env)
+    cache: CacheConfig = Field(default_factory=CacheConfig.from_env)
 
 
 @lru_cache()

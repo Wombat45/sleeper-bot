@@ -1,7 +1,7 @@
 """Context providers for Sleeper fantasy football data.
 
 This module provides additional context about fantasy football concepts and data
-to help Goose better understand and interact with the domain.
+to help any MCP-compatible LLM client better understand and interact with the domain.
 """
 
 from typing import Any, Dict, List, Optional
