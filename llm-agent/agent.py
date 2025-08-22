@@ -274,7 +274,7 @@ class FantasyFootballAgent:
         if not function_results:
             return "Oh man, another one of these questions? Listen, back in my glory days in the league, I would have crushed this. But since you're asking, what do you want to know about your league, teams, or players? Maybe I can share some of my legendary strategies that made everyone so... appreciative of my genius. 😏"
         
-        # Build a simple response
+        # Build a comprehensive response
         responses = []
         for result in function_results:
             if "error" in result:
@@ -283,11 +283,35 @@ class FantasyFootballAgent:
                 data = result["result"]["result"]
                 if isinstance(data, dict):
                     if "name" in data:
-                        responses.append(f"📊 {data['name']}")
+                        # For league info, provide more details
+                        if "settings" in data:
+                            responses.append(f"🏈 **{data['name']}** - {data.get('season', 'Current Season')}\n"
+                                          f"📊 {data.get('total_rosters', 'Unknown')} teams, "
+                                          f"💰 ${data.get('settings', {}).get('waiver_budget', 'Unknown')} waiver budget")
+                        else:
+                            responses.append(f"📊 **{data['name']}**")
                     elif "username" in data:
-                        responses.append(f"📊 {data['username']}")
+                        responses.append(f"👤 **{data['username']}** - {data.get('display_name', 'No display name')}")
                     else:
-                        responses.append(f"📊 {result['function']} data retrieved")
+                        # Provide more context for other data
+                        responses.append(f"📊 **{result['function']}** data: {str(data)[:200]}...")
+                elif isinstance(data, list):
+                    # Handle list data
+                    if len(data) > 0:
+                        responses.append(f"📋 **{result['function']}** - Found {len(data)} items")
+                        # Show first few items as examples
+                        for i, item in enumerate(data[:3]):
+                            if isinstance(item, dict) and "name" in item:
+                                responses.append(f"  • {item['name']}")
+                            elif isinstance(item, str):
+                                responses.append(f"  • {item}")
+                    else:
+                        responses.append(f"📋 **{result['function']}** - No data found")
+                else:
+                    responses.append(f"📊 **{result['function']}** - {str(data)[:100]}")
+        
+        if not responses:
+            return "Oh man, I'm getting some weird data here. Back in my day, we didn't have these fancy systems - we just wrote everything down on napkins and hoped for the best. What exactly are you trying to find out about your league?"
         
         return "\n\n".join(responses)
     
@@ -296,6 +320,8 @@ class FantasyFootballAgent:
         try:
             # Prepare the prompt for the LLM
             prompt = self._build_llm_prompt(query, data)
+            print(f"🤖 LLM Prompt length: {len(prompt)} characters")
+            print(f"🤖 LLM Prompt preview: {prompt[:200]}...")
             
             # Call the LLM
             async with httpx.AsyncClient() as client:
@@ -308,7 +334,7 @@ class FantasyFootballAgent:
                         "options": {
                             "temperature": 0.7,
                             "top_p": 0.9,
-                            "max_tokens": 500
+                            "max_tokens": 1000  # Increased from 500
                         }
                     },
                     timeout=30
@@ -316,7 +342,16 @@ class FantasyFootballAgent:
                 
                 if response.status_code == 200:
                     result = response.json()
-                    return result.get("response", "").strip()
+                    llm_response = result.get("response", "").strip()
+                    print(f"🤖 LLM Response length: {len(llm_response)} characters")
+                    print(f"🤖 LLM Response preview: {llm_response[:200]}...")
+                    
+                    # Check if response is too short
+                    if len(llm_response) < 20:
+                        print(f"⚠️ LLM response too short: '{llm_response}'")
+                        return ""
+                    
+                    return llm_response
                 else:
                     print(f"LLM API error: {response.status_code} - {response.text}")
                     return ""

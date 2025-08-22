@@ -85,11 +85,11 @@ async def on_message(message):
         # Process the question using the same logic as the ask command
         await process_fantasy_football_question(message, question)
     
-    # # Also respond to messages that seem like fantasy football questions (optional)
-    # elif any(keyword in message.content.lower() for keyword in ['fantasy', 'football', 'league', 'team', 'roster', 'player', 'nfl', 'sleeper']):
-    #     # Only respond if the message is a question or seems like it needs a response
-    #     if '?' in message.content or any(word in message.content.lower() for word in ['who', 'what', 'when', 'where', 'why', 'how', 'tell me', 'show me']):
-    #         await process_fantasy_football_question(message, message.content)
+    # Also respond to messages that seem like fantasy football questions (optional)
+    elif any(keyword in message.content.lower() for keyword in ['fantasy', 'football', 'league', 'team', 'roster', 'player', 'nfl', 'sleeper']):
+        # Only respond if the message is a question or seems like it needs a response
+        if '?' in message.content or any(word in message.content.lower() for word in ['who', 'what', 'when', 'where', 'why', 'how', 'tell me', 'show me']):
+            await process_fantasy_football_question(message, message.content)
 
 
 async def process_fantasy_football_question(message, question):
@@ -113,6 +113,12 @@ async def process_fantasy_football_question(message, question):
         if response.status_code == 200:
             result = response.json()
             answer = result.get("response", "Sorry, I couldn't get a response.")
+            
+            # Check if the response is too short or empty
+            if not answer or len(answer.strip()) < 10:
+                await message.channel.send("🤔 Hmm, I got a very short response. Let me try to get more details about that.")
+                print(f"⚠️ Short response from LLM: '{answer}'")
+                return
             
             # Split long responses to avoid Discord message limits
             if len(answer) > 2000:
