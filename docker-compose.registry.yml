@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sleeper-bot}-mcp-server:latest
+    container_name: sleeper-bot-mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - SLEEPER_API_BASE_URL=https://api.sleeper.app/v1
+      - CACHE_TTL=300
+      - CACHE_MAX_SIZE=1000
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - sleeper-bot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  llm-agent:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sleeper-bot}-llm-agent:latest
+    container_name: sleeper-bot-llm-agent
+    ports:
+      - "8001:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - API_KEY=${API_KEY}
+      - MCP_SERVER_URL=http://mcp-server:8000
+      - DEFAULT_LEAGUE_ID=${DEFAULT_LEAGUE_ID}
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_URL=${LLM_URL:-http://host.docker.internal:11434/api/generate}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-llama3.2:latest}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - sleeper-bot-network
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  discord-bot:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sleeper-bot}-discord-bot:latest
+    container_name: sleeper-bot-discord-bot
+    ports:
+      - "8002:8000"
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - LLM_API_URL=http://llm-agent:8000
+      - API_KEY=${API_KEY}
+      - COMMAND_PREFIX=${COMMAND_PREFIX:-!}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - sleeper-bot-network
+    depends_on:
+      llm-agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+networks:
+  sleeper-bot-network:
+    driver: bridge
+
+volumes:
+  logs:
