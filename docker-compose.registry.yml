@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   mcp-server:
-    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sleeper-bot}-mcp-server:latest
+    image: ghcr.io/wombat45/sleeper-bot-mcp-server:latest
     container_name: sleeper-bot-mcp-server
     ports:
       - "8000:8000"
@@ -25,7 +23,7 @@ services:
     restart: unless-stopped
 
   llm-agent:
-    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sleeper-bot}-llm-agent:latest
+    image: ghcr.io/wombat45/sleeper-bot-llm-agent:latest
     container_name: sleeper-bot-llm-agent
     ports:
       - "8001:8000"
@@ -35,9 +33,9 @@ services:
       - API_KEY=${API_KEY}
       - MCP_SERVER_URL=http://mcp-server:8000
       - DEFAULT_LEAGUE_ID=${DEFAULT_LEAGUE_ID}
-      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
-      - LLM_URL=${LLM_URL:-http://host.docker.internal:11434/api/generate}
-      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-digitalocean}
+      - LLM_URL=${LLM_URL:-https://td4bxjc626e5xweih26eppev.agents.do-ai.run/api/v1/chat/completions}
+      - LLM_API_KEY=${LLM_API_KEY:-O1AD1a0JeIl3B-T9sJvvBgHEHfwIoPze}
       - LLM_MODEL=${LLM_MODEL:-llama3.2:latest}
     volumes:
       - ./logs:/app/logs
@@ -55,7 +53,7 @@ services:
     restart: unless-stopped
 
   discord-bot:
-    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sleeper-bot}-discord-bot:latest
+    image: ghcr.io/wombat45/sleeper-bot-discord-bot:latest
     container_name: sleeper-bot-discord-bot
     ports:
       - "8002:8000"

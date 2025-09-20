@@ -323,26 +323,66 @@ class FantasyFootballAgent:
             print(f"🤖 LLM Prompt length: {len(prompt)} characters")
             print(f"🤖 LLM Prompt preview: {prompt[:200]}...")
             
-            # Call the LLM
+            # Get LLM configuration from environment
+            llm_provider = os.getenv("LLM_PROVIDER", "ollama")
+            llm_api_key = os.getenv("LLM_API_KEY", "")
+            llm_model = os.getenv("LLM_MODEL", "llama3.2:latest")
+            
+            # Call the LLM based on provider
             async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    LLM_URL,
-                    json={
-                        "model": "llama3.2:latest",  # Use the model you have installed
+                if llm_provider == "digitalocean":
+                    # DigitalOcean AI Agent format
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {llm_api_key}"
+                    }
+                    payload = {
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": prompt
+                            }
+                        ],
+                        "stream": False,
+                        "include_functions_info": False,
+                        "include_retrieval_info": False,
+                        "include_guardrails_info": False
+                    }
+                else:
+                    # Ollama format (default)
+                    headers = {"Content-Type": "application/json"}
+                    payload = {
+                        "model": llm_model,
                         "prompt": prompt,
                         "stream": False,
                         "options": {
                             "temperature": 0.7,
                             "top_p": 0.9,
-                            "max_tokens": 1000  # Increased from 500
+                            "max_tokens": 1000
                         }
-                    },
+                    }
+                
+                response = await client.post(
+                    LLM_URL,
+                    json=payload,
+                    headers=headers,
                     timeout=30
                 )
                 
                 if response.status_code == 200:
                     result = response.json()
-                    llm_response = result.get("response", "").strip()
+                    
+                    # Parse response based on provider
+                    if llm_provider == "digitalocean":
+                        # DigitalOcean format: response is in choices[0].message.content
+                        if "choices" in result and len(result["choices"]) > 0:
+                            llm_response = result["choices"][0]["message"]["content"].strip()
+                        else:
+                            llm_response = result.get("response", "").strip()
+                    else:
+                        # Ollama format
+                        llm_response = result.get("response", "").strip()
+                    
                     print(f"🤖 LLM Response length: {len(llm_response)} characters")
                     print(f"🤖 LLM Response preview: {llm_response[:200]}...")
                     
