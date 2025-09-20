@@ -43,7 +43,10 @@ services:
       - API_KEY=${API_KEY:-your-api-key-here}
       - MCP_SERVER_URL=http://mcp-server:8000
       - DEFAULT_LEAGUE_ID=${DEFAULT_LEAGUE_ID:-}
-      - LLM_URL=http://host.docker.internal:11434/api/generate
+      - LLM_PROVIDER=digitalocean
+      - LLM_URL=https://td4bxjc626e5xweih26eppev.agents.do-ai.run/api/v1/chat/completions
+      - LLM_API_KEY=O1AD1a0JeIl3B-T9sJvvBgHEHfwIoPze
+      - LLM_MODEL=llama3.2:latest
       - HOST=0.0.0.0
       - PORT=8000
     volumes:
