@@ -253,6 +253,24 @@ def get_enhanced_functions() -> List[MCPFunction]:
             ],
         ),
         MCPFunction(
+            name="get_league_matchups",
+            description="Get weekly matchups for a specific league and week with enhanced context",
+            parameters=[
+                MCPFunctionParameter(
+                    name="league_id",
+                    type="string",
+                    description="League ID to look up matchups for",
+                    required=True,
+                ),
+                MCPFunctionParameter(
+                    name="week",
+                    type="string",
+                    description="Week number (e.g., '1', '2', etc.)",
+                    required=True,
+                ),
+            ],
+        ),
+        MCPFunction(
             name="get_nfl_state",
             description="Get current NFL season state information",
             parameters=[],

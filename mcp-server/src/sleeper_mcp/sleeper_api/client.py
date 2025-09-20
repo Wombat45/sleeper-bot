@@ -108,3 +108,15 @@ class SleeperClient:
             List[Dict[str, Any]]: List of roster data
         """
         return await self._get(f"league/{league_id}/rosters")
+    
+    async def get_league_matchups(self, league_id: str, week: str) -> List[Dict[str, Any]]:
+        """Get weekly matchups for a league.
+        
+        Args:
+            league_id: Sleeper league ID
+            week: Week number
+            
+        Returns:
+            List[Dict[str, Any]]: List of matchup data
+        """
+        return await self._get(f"league/{league_id}/matchups/{week}")

@@ -135,6 +135,25 @@ class FantasyFootballAgent:
                 "extract_params": lambda match: {"league_id": DEFAULT_LEAGUE_ID},
                 "priority": 1
             },
+            {
+                "name": "get_league_matchups",
+                "patterns": [
+                    r"who\s+is\s+playing\s+who\s+this\s+week",
+                    r"matchups?\s+this\s+week",
+                    r"who\s+plays\s+who",
+                    r"this\s+week.*matchups?",
+                    r"week.*matchups?",
+                    r"who\s+is\s+playing\s+who",
+                    r"matchups?",
+                    r"games?\s+this\s+week",
+                    r"who\s+am\s+i\s+playing",
+                    r"my\s+matchup",
+                    r"this\s+week.*games?",
+                    r"schedule.*this\s+week"
+                ],
+                "extract_params": lambda match: {"league_id": DEFAULT_LEAGUE_ID, "week": "1"},  # Default to week 1, could be improved
+                "priority": 1
+            },
             # User-specific queries (medium priority)
             {
                 "name": "get_user",
@@ -145,7 +164,10 @@ class FantasyFootballAgent:
                     r"(\w+)\s+info",
                     r"tell\s+me\s+about\s+(\w+)",
                     r"(\w+)\s+details?",
-                    r"what\s+about\s+(\w+)"
+                    r"what\s+about\s+(\w+)",
+                    r"describe\s+(\w+)",
+                    r"(\w+)\s+team",
+                    r"team\s+(\w+)"
                 ],
                 "extract_params": lambda match: {"identifier": match.group(1)},
                 "priority": 2
@@ -210,9 +232,17 @@ class FantasyFootballAgent:
                     except Exception as e:
                         print(f"Error extracting parameters for {pattern_info['name']}: {e}")
         
-        # Sort by priority (lower number = higher priority) and return the best match
+        # Sort by priority (lower number = higher priority)
         if matches:
             matches.sort(key=lambda x: x["priority"])
+            
+            # For matchup queries, also get NFL state to get current week
+            if matches[0]["name"] == "get_league_matchups":
+                function_calls.append({
+                    "name": "get_nfl_state",
+                    "parameters": {}
+                })
+            
             function_calls.append({
                 "name": matches[0]["name"],
                 "parameters": matches[0]["parameters"]
@@ -223,9 +253,45 @@ class FantasyFootballAgent:
     async def execute_function_calls(self, function_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Execute the detected function calls and return results."""
         results = []
+        nfl_state = None
         
+        # First, get NFL state if we need it for matchups
         for func_call in function_calls:
+            if func_call["name"] == "get_nfl_state":
+                try:
+                    result = await self.mcp_client.invoke_function(
+                        func_call["name"], 
+                        func_call["parameters"]
+                    )
+                    nfl_state = result
+                    results.append({
+                        "function": func_call["name"],
+                        "parameters": func_call["parameters"],
+                        "result": result
+                    })
+                except Exception as e:
+                    results.append({
+                        "function": func_call["name"],
+                        "parameters": func_call["parameters"],
+                        "error": str(e)
+                    })
+                break
+        
+        # Now execute other functions, using NFL state for matchups if available
+        for func_call in function_calls:
+            if func_call["name"] == "get_nfl_state":
+                continue  # Already processed
+                
             try:
+                # If this is a matchup call and we have NFL state, use current week
+                if func_call["name"] == "get_league_matchups" and nfl_state and "error" not in nfl_state:
+                    try:
+                        current_week = nfl_state["result"]["result"].get("week", "1")
+                        func_call["parameters"]["week"] = str(current_week)
+                        print(f"Using current week {current_week} for matchups")
+                    except Exception as e:
+                        print(f"Could not extract week from NFL state: {e}")
+                
                 result = await self.mcp_client.invoke_function(
                     func_call["name"], 
                     func_call["parameters"]
